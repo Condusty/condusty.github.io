@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { useJeopardyStore } from '@/games/jeopardy/store';
 import type { Cell, Phase, Player } from '@/games/jeopardy/types';
 import { tintFor } from '@/lib/colors';
 import { cn } from '@/lib/cn';
@@ -21,6 +22,26 @@ export function QuestionView({
   onClose,
   onAward,
 }: QuestionViewProps) {
+  const settings = useJeopardyStore((s) => s.settings);
+  const [timeLeft, setTimeLeft] = useState(settings.answerTimeLimit);
+
+  useEffect(() => {
+    if (settings.answerTimeLimit > 0 && phase === 'question') {
+      setTimeLeft(settings.answerTimeLimit);
+      const interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            onReveal();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [settings.answerTimeLimit, phase, onReveal]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -54,6 +75,17 @@ export function QuestionView({
           </span>
           <span className="text-fg-muted">·</span>
           <span className="font-mono text-sm text-fg">{cell.value}</span>
+          {settings.answerTimeLimit > 0 && phase === 'question' && (
+            <>
+              <span className="text-fg-muted">·</span>
+              <span className={cn(
+                "font-mono text-sm font-bold",
+                timeLeft <= 5 ? "text-danger animate-pulse" : "text-fg"
+              )}>
+                {timeLeft}s
+              </span>
+            </>
+          )}
         </div>
         <button
           type="button"

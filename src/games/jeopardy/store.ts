@@ -87,9 +87,10 @@ export const useJeopardyStore = create<JeopardyStore>()(
       },
 
       award: (playerId, delta) => {
-        const { players, activeCellId, usedCellIds } = get();
+        const { players, activeCellId, usedCellIds, settings } = get();
+        const adjustedDelta = delta < 0 ? delta * settings.wrongAnswerPenalty : delta;
         const nextPlayers = players.map((p) =>
-          p.id === playerId ? { ...p, score: p.score + delta } : p,
+          p.id === playerId ? { ...p, score: p.score + adjustedDelta } : p,
         );
         set({
           players: nextPlayers,
