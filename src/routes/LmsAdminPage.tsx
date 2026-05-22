@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { IconButton } from '@/components/ui/IconButton';
 import { useToast } from '@/components/ui/Toast';
 import { CsvImporter } from '@/components/lms/CsvImporter';
 import { QuizList } from '@/components/lms/QuizList';
+import { SettingsModal } from '@/components/lms/SettingsModal';
 import {
   PlayerSetup,
   makeDefaultPlayers,
@@ -28,6 +31,7 @@ export function LmsAdminPage() {
     return list[0]?.id ?? null;
   });
   const [players, setPlayers] = useState<DraftPlayer[]>(() => makeDefaultPlayers());
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const refresh = () => {
     const list = loadLmsQuizzes();
@@ -99,12 +103,23 @@ export function LmsAdminPage() {
         >
           ← Library
         </Link>
-        <span className="text-xs uppercase tracking-[0.18em] text-fg-muted font-mono">
-          Last Man Standing · Admin
-        </span>
-        <h1 className="text-3xl font-semibold text-fg leading-tight tracking-tight">
-          Set up your game.
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-3">
+            <span className="text-xs uppercase tracking-[0.18em] text-fg-muted font-mono">
+              Last Man Standing · Admin
+            </span>
+            <h1 className="text-3xl font-semibold text-fg leading-tight tracking-tight">
+              Set up your game.
+            </h1>
+          </div>
+          <IconButton
+            onClick={() => setIsSettingsOpen(true)}
+            title="Game Settings"
+            className="mt-1"
+          >
+            <Settings className="w-4 h-4" />
+          </IconButton>
+        </div>
         <p className="text-sm text-fg-muted leading-relaxed">
           Import a CSV with one or more rounds (each: a category and the list of correct answers).
           Pick the quiz, name your players, and start. The host console (with answers) and the
@@ -191,6 +206,11 @@ export function LmsAdminPage() {
           </div>
         </section>
       </div>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }
