@@ -116,7 +116,8 @@ export const useJeopardyStore = create<JeopardyStore>()(
       },
 
       endGame: () => {
-        set({ ...emptyState });
+        const currentSettings = get().settings;
+        set({ ...emptyState, settings: currentSettings });
       },
     }),
     {
