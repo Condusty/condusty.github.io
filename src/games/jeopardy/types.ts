@@ -23,6 +23,11 @@ export type Quiz = {
 
 export type Phase = 'idle' | 'question' | 'answer';
 
+export interface JeopardySettings {
+  wrongAnswerPenalty: number; // 0.0 to 1.0
+  answerTimeLimit: number;    // seconds, 0 = disabled
+}
+
 export type GameState = {
   quizId: string | null;
   quizName: string | null;
@@ -33,4 +38,5 @@ export type GameState = {
   activeCellId: string | null;
   phase: Phase;
   startedAt: number | null;
+  settings: JeopardySettings;
 };

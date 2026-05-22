@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { ACTIVE_GAME_STORAGE_KEY } from './constants';
-import type { Cell, GameState, Phase, Player, Quiz } from './types';
+import type { Cell, GameState, Phase, Player, Quiz, JeopardySettings } from './types';
 
 export interface JeopardyStore extends GameState {
   hasGame: () => boolean;
@@ -13,8 +13,14 @@ export interface JeopardyStore extends GameState {
   closeQuestion: () => void;
   award: (playerId: string, delta: number) => void;
   setScore: (playerId: string, score: number) => void;
+  updateSettings: (settings: Partial<JeopardySettings>) => void;
   endGame: () => void;
 }
+
+const defaultSettings: JeopardySettings = {
+  wrongAnswerPenalty: 1.0,
+  answerTimeLimit: 0,
+};
 
 const emptyState: GameState = {
   quizId: null,
@@ -26,6 +32,7 @@ const emptyState: GameState = {
   activeCellId: null,
   phase: 'idle' as Phase,
   startedAt: null,
+  settings: defaultSettings,
 };
 
 export const useJeopardyStore = create<JeopardyStore>()(
@@ -102,6 +109,12 @@ export const useJeopardyStore = create<JeopardyStore>()(
         });
       },
 
+      updateSettings: (newSettings) => {
+        set((state) => ({
+          settings: { ...state.settings, ...newSettings },
+        }));
+      },
+
       endGame: () => {
         set({ ...emptyState });
       },
@@ -119,6 +132,7 @@ export const useJeopardyStore = create<JeopardyStore>()(
         activeCellId: state.activeCellId,
         phase: state.phase,
         startedAt: state.startedAt,
+        settings: state.settings,
       }),
       version: 1,
     },
