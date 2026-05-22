@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { LMS_ACTIVE_GAME_STORAGE_KEY } from './constants';
-import type { LmsGameState, LmsPhase, LmsPlayer, LmsQuiz } from './types';
+import type { LmsGameState, LmsPhase, LmsPlayer, LmsQuiz, LmsSettings } from './types';
 
 export interface LmsStore extends LmsGameState {
   hasGame: () => boolean;
@@ -23,7 +23,14 @@ export interface LmsStore extends LmsGameState {
   finishRound: () => void;
   nextRound: () => void;
   endGame: () => void;
+  updateSettings: (settings: Partial<LmsSettings>) => void;
 }
+
+export const defaultLmsSettings: LmsSettings = {
+  survivorPointsType: 'standard',
+  fixedPointsValue: 5,
+  answerCardTimerEnabled: false,
+};
 
 const emptyState: LmsGameState = {
   quizId: null,
@@ -36,6 +43,7 @@ const emptyState: LmsGameState = {
   lastRoundPoints: {},
   phase: 'idle' as LmsPhase,
   startedAt: null,
+  settings: defaultLmsSettings,
 };
 
 /**
@@ -176,7 +184,14 @@ export const useLmsStore = create<LmsStore>()(
       },
 
       endGame: () => {
-        set({ ...emptyState });
+        const { settings } = get();
+        set({ ...emptyState, settings });
+      },
+
+      updateSettings: (newSettings) => {
+        set((state) => ({
+          settings: { ...state.settings, ...newSettings },
+        }));
       },
     }),
     {
@@ -193,6 +208,7 @@ export const useLmsStore = create<LmsStore>()(
         lastRoundPoints: state.lastRoundPoints,
         phase: state.phase,
         startedAt: state.startedAt,
+        settings: state.settings,
       }),
       version: 1,
     },

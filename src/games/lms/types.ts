@@ -25,6 +25,14 @@ export type LmsPlayer = {
 
 export type LmsPhase = 'idle' | 'playing' | 'round-results' | 'final';
 
+export type SurvivorPointsType = 'standard' | 'half' | 'double' | 'fixed';
+
+export interface LmsSettings {
+  survivorPointsType: SurvivorPointsType;
+  fixedPointsValue: number;
+  answerCardTimerEnabled: boolean;
+}
+
 export type LmsGameState = {
   quizId: string | null;
   quizName: string | null;
@@ -36,4 +44,5 @@ export type LmsGameState = {
   lastRoundPoints: Record<string, number>;
   phase: LmsPhase;
   startedAt: number | null;
+  settings: LmsSettings;
 };
