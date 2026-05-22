@@ -1,0 +1,31 @@
+category,value,question,answer
+Food,100,This Italian dish is a flat round base with toppings,Pizza
+Food,200,This fruit is yellow and curved,Banana
+Food,300,This Japanese food is often wrapped in seaweed,Sushi
+Food,400,This Mexican dish is folded and usually filled with meat or beans,Taco
+Food,500,This French pastry is laminated and crescent shaped,Croissant
+Space,100,The planet known as the Red Planet,Mars
+Space,200,The natural satellite of Earth,Moon
+Space,300,The galaxy that contains our solar system,Milky Way
+Space,400,The first human to walk on the Moon,Neil Armstrong
+Space,500,The telescope launched in 1990 that changed astronomy,Hubble Space Telescope
+Geography,100,The largest ocean on Earth,Pacific Ocean
+Geography,200,The river that flows through Egypt,The Nile
+Geography,300,The tallest mountain above sea level,Mount Everest
+Geography,400,The largest desert in the world,Antarctic Desert
+Geography,500,The strait separating Europe and Africa at Spain,Gibraltar Strait
+History,100,The wall that divided Berlin until 1989,Berlin Wall
+History,200,The ship that sank on its maiden voyage in 1912,Titanic
+History,300,The document signed in 1215 limiting English royal power,Magna Carta
+History,400,The war fought between North and South in the United States,American Civil War
+History,500,The 15th century empire centered in present-day Mexico,Aztec Empire
+Technology,100,The company that created Windows,Microsoft
+Technology,200,The language most associated with styling web pages,CSS
+Technology,300,The open-source OS kernel created by Linus Torvalds,Linux
+Technology,400,The protocol that secures most web traffic today,HTTPS
+Technology,500,The data structure with first-in first-out behavior,Queue
+Art,100,The painter of the Mona Lisa,Leonardo da Vinci
+Art,200,The style of Pablo Picasso with geometric forms,Cubism
+Art,300,The museum in Paris home to the Mona Lisa,Louvre
+Art,400,The artist who cut off part of his ear,Vincent van Gogh
+Art,500,The ceiling painted by Michelangelo in Vatican City,Sistine Chapel
