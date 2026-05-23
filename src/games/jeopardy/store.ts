@@ -88,7 +88,10 @@ export const useJeopardyStore = create<JeopardyStore>()(
 
       award: (playerId, delta) => {
         const { players, activeCellId, usedCellIds, settings } = get();
+
+        // Calculate adjusted delta if negative (wrong answer)
         const adjustedDelta = delta < 0 ? delta * settings.wrongAnswerPenalty : delta;
+
         const nextPlayers = players.map((p) =>
           p.id === playerId ? { ...p, score: p.score + adjustedDelta } : p,
         );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoundBoard } from '@/components/lms/RoundBoard';
 import { LmsScoreBar } from '@/components/lms/LmsScoreBar';
@@ -24,12 +24,32 @@ export function LmsPlayPage() {
   const eliminationOrder = useLmsStore((s) => s.eliminationOrder);
   const lastRoundPoints = useLmsStore((s) => s.lastRoundPoints);
   const phase = useLmsStore((s) => s.phase);
+  const settings = useLmsStore((s) => s.settings);
+  const timerStartedAt = useLmsStore((s) => s.timerStartedAt);
+
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!quizId) {
       navigate('/lms', { replace: true });
     }
   }, [quizId, navigate]);
+
+  useEffect(() => {
+    if (settings.answerCardTimerEnabled && timerStartedAt && phase === 'playing') {
+      const updateTimer = () => {
+        const elapsed = (Date.now() - timerStartedAt) / 1000;
+        const duration = settings.answerCardTimerDuration || 120;
+        const remaining = Math.max(0, duration - elapsed);
+        setTimeLeft(remaining > 0 ? Math.ceil(remaining) : 0);
+      };
+      updateTimer();
+      const interval = setInterval(updateTimer, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [settings.answerCardTimerEnabled, timerStartedAt, phase, settings.answerCardTimerDuration]);
 
   const round = rounds[currentRound];
 
@@ -117,9 +137,16 @@ export function LmsPlayPage() {
               {round.category}
             </h1>
           </div>
-          <span className="text-xs font-mono text-fg-muted">
-            {revealedAnswerIds.length}/{round.answers.length} revealed
-          </span>
+          <div className="flex items-center gap-4">
+            {timeLeft !== null && (
+              <div className="px-3 py-1 rounded bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] border border-[color:var(--accent)] text-[color:var(--accent)] font-mono text-xl font-bold shadow-sm animate-fade-up">
+                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+              </div>
+            )}
+            <span className="text-xs font-mono text-fg-muted">
+              {revealedAnswerIds.length}/{round.answers.length} revealed
+            </span>
+          </div>
         </div>
       </header>
 

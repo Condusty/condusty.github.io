@@ -31,6 +31,7 @@ export interface LmsSettings {
   survivorPointsType: SurvivorPointsType;
   fixedPointsValue: number;
   answerCardTimerEnabled: boolean;
+  answerCardTimerDuration: number;
 }
 
 export type LmsGameState = {
@@ -45,4 +46,5 @@ export type LmsGameState = {
   phase: LmsPhase;
   startedAt: number | null;
   settings: LmsSettings;
+  timerStartedAt: number | null;
 };

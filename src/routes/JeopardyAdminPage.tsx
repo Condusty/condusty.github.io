@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { IconButton } from '@/components/ui/IconButton';
 import { useToast } from '@/components/ui/Toast';
 import { CsvImporter } from '@/components/jeopardy/CsvImporter';
 import { QuizList } from '@/components/jeopardy/QuizList';
+import { SettingsModal } from '@/components/jeopardy/SettingsModal';
 import { PlayerSetup, makeDefaultPlayers, type DraftPlayer } from '@/components/jeopardy/PlayerSetup';
 import { loadQuizzes, getQuiz } from '@/lib/storage';
 import { useJeopardyStore } from '@/games/jeopardy/store';
@@ -24,6 +27,7 @@ export function JeopardyAdminPage() {
     return list[0]?.id ?? null;
   });
   const [players, setPlayers] = useState<DraftPlayer[]>(() => makeDefaultPlayers());
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const refresh = () => {
     const list = loadQuizzes();
@@ -94,9 +98,17 @@ export function JeopardyAdminPage() {
         <span className="text-xs uppercase tracking-[0.18em] text-fg-muted font-mono">
           Jeopardy · Admin
         </span>
-        <h1 className="text-3xl font-semibold text-fg leading-tight tracking-tight">
-          Set up your game.
-        </h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-semibold text-fg leading-tight tracking-tight">
+            Set up your game.
+          </h1>
+          <IconButton
+            onClick={() => setIsSettingsOpen(true)}
+            aria-label="Game Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </IconButton>
+        </div>
         <p className="text-sm text-fg-muted leading-relaxed">
           Import a CSV, pick which quiz to use, name your players, and start. Mid-game state
           auto-saves so a refresh won't lose your place.
@@ -173,6 +185,11 @@ export function JeopardyAdminPage() {
           </div>
         </section>
       </div>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }

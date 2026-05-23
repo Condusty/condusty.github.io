@@ -30,6 +30,7 @@ export const defaultLmsSettings: LmsSettings = {
   survivorPointsType: 'standard',
   fixedPointsValue: 5,
   answerCardTimerEnabled: false,
+  answerCardTimerDuration: 120,
 };
 
 const emptyState: LmsGameState = {
@@ -44,6 +45,7 @@ const emptyState: LmsGameState = {
   phase: 'idle' as LmsPhase,
   startedAt: null,
   settings: defaultLmsSettings,
+  timerStartedAt: null,
 };
 
 /**
@@ -54,6 +56,7 @@ const emptyState: LmsGameState = {
 export function distributeRoundPoints(
   playerIds: string[],
   eliminationOrder: string[],
+  settings: LmsSettings,
 ): Record<string, number> {
   const N = playerIds.length;
   const points: Record<string, number> = {};
@@ -62,9 +65,19 @@ export function distributeRoundPoints(
       points[id] = i + 1;
     }
   });
+
+  let survivorPoints = N;
+  if (settings.survivorPointsType === 'half') {
+    survivorPoints = Math.ceil(N / 2);
+  } else if (settings.survivorPointsType === 'double') {
+    survivorPoints = N * 2;
+  } else if (settings.survivorPointsType === 'fixed') {
+    survivorPoints = settings.fixedPointsValue;
+  }
+
   for (const id of playerIds) {
     if (!eliminationOrder.includes(id)) {
-      points[id] = N;
+      points[id] = survivorPoints;
     }
   }
   return points;
@@ -114,6 +127,7 @@ export const useLmsStore = create<LmsStore>()(
           lastRoundPoints: {},
           phase: 'playing',
           startedAt: Date.now(),
+          timerStartedAt: null,
         });
       },
 
@@ -124,7 +138,10 @@ export const useLmsStore = create<LmsStore>()(
         if (!round) return;
         if (!round.answers.some((a) => a.id === answerId)) return;
         if (revealedAnswerIds.includes(answerId)) return;
-        set({ revealedAnswerIds: [...revealedAnswerIds, answerId] });
+        set({
+          revealedAnswerIds: [...revealedAnswerIds, answerId],
+          timerStartedAt: Date.now(),
+        });
       },
 
       hideAnswer: (answerId) => {
@@ -148,10 +165,10 @@ export const useLmsStore = create<LmsStore>()(
       },
 
       finishRound: () => {
-        const { players, eliminationOrder, phase } = get();
+        const { players, eliminationOrder, phase, settings } = get();
         if (phase !== 'playing') return;
         const playerIds = players.map((p) => p.id);
-        const pts = distributeRoundPoints(playerIds, eliminationOrder);
+        const pts = distributeRoundPoints(playerIds, eliminationOrder, settings);
         set({
           players: players.map((p) => ({
             ...p,
@@ -209,6 +226,7 @@ export const useLmsStore = create<LmsStore>()(
         phase: state.phase,
         startedAt: state.startedAt,
         settings: state.settings,
+        timerStartedAt: state.timerStartedAt,
       }),
       version: 1,
     },

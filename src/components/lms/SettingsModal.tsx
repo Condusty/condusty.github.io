@@ -18,12 +18,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [pointsType, setPointsType] = useState<SurvivorPointsType>(settings.survivorPointsType);
   const [fixedValue, setFixedValue] = useState(settings.fixedPointsValue.toString());
   const [timerEnabled, setTimerEnabled] = useState(settings.answerCardTimerEnabled);
+  const [timerDuration, setTimerDuration] = useState(settings.answerCardTimerDuration?.toString() ?? '120');
 
   useEffect(() => {
     if (isOpen) {
       setPointsType(settings.survivorPointsType);
       setFixedValue(settings.fixedPointsValue.toString());
       setTimerEnabled(settings.answerCardTimerEnabled);
+      setTimerDuration(settings.answerCardTimerDuration?.toString() ?? '120');
     }
   }, [isOpen, settings]);
 
@@ -32,6 +34,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       survivorPointsType: pointsType,
       fixedPointsValue: parseInt(fixedValue, 10) || 0,
       answerCardTimerEnabled: timerEnabled,
+      answerCardTimerDuration: parseInt(timerDuration, 10) || 120,
     });
     onClose();
   };
@@ -98,6 +101,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             onChange={(e) => setTimerEnabled(e.target.checked)}
           />
         </div>
+
+        {timerEnabled && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-fg">
+              Timer Duration (seconds)
+            </label>
+            <Input
+              type="number"
+              min="1"
+              value={timerDuration}
+              onChange={(e) => setTimerDuration(e.target.value)}
+            />
+          </div>
+        )}
       </ModalBody>
       <ModalFooter>
         <Button variant="ghost" onClick={onClose}>

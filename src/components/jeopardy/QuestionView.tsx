@@ -32,7 +32,6 @@ export function QuestionView({
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(interval);
-            onReveal();
             return 0;
           }
           return prev - 1;
@@ -40,7 +39,7 @@ export function QuestionView({
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [settings.answerTimeLimit, phase, onReveal]);
+  }, [settings.answerTimeLimit, phase]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -159,7 +158,7 @@ export function QuestionView({
                     onClick={() => onAward(p.id, -cell.value)}
                     className="h-8 w-12 rounded-md border border-border text-sm font-mono text-danger hover:bg-[color-mix(in_srgb,var(--danger)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--danger)_35%,var(--border))] transition-colors ring-focus"
                   >
-                    −{cell.value}
+                    −{Math.round(cell.value * settings.wrongAnswerPenalty)}
                   </button>
                   <button
                     type="button"

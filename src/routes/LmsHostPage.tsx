@@ -29,6 +29,7 @@ export function LmsHostPage() {
   const eliminationOrder = useLmsStore((s) => s.eliminationOrder);
   const lastRoundPoints = useLmsStore((s) => s.lastRoundPoints);
   const phase = useLmsStore((s) => s.phase);
+  const settings = useLmsStore((s) => s.settings);
 
   const revealAnswer = useLmsStore((s) => s.revealAnswer);
   const hideAnswer = useLmsStore((s) => s.hideAnswer);
@@ -37,14 +38,32 @@ export function LmsHostPage() {
   const finishRound = useLmsStore((s) => s.finishRound);
   const nextRound = useLmsStore((s) => s.nextRound);
   const endGame = useLmsStore((s) => s.endGame);
+  const timerStartedAt = useLmsStore((s) => s.timerStartedAt);
 
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!quizId) {
       navigate('/lms', { replace: true });
     }
   }, [quizId, navigate]);
+
+  useEffect(() => {
+    if (settings.answerCardTimerEnabled && timerStartedAt && phase === 'playing') {
+      const updateTimer = () => {
+        const elapsed = (Date.now() - timerStartedAt) / 1000;
+        const duration = settings.answerCardTimerDuration || 120;
+        const remaining = Math.max(0, duration - elapsed);
+        setTimeLeft(remaining > 0 ? Math.ceil(remaining) : 0);
+      };
+      updateTimer();
+      const interval = setInterval(updateTimer, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [settings.answerCardTimerEnabled, timerStartedAt, phase, settings.answerCardTimerDuration]);
 
   if (!quizId) return null;
 
@@ -122,7 +141,7 @@ export function LmsHostPage() {
       {phase === 'playing' && round && (
         <div className="flex-1 mx-auto w-full max-w-7xl px-6 py-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           <section className="flex flex-col gap-4">
-            <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline justify-between border-b border-border pb-2">
               <div className="flex flex-col">
                 <span className="text-xs font-mono uppercase tracking-[0.18em] text-fg-muted">
                   Round {currentRound + 1} · category
@@ -131,9 +150,16 @@ export function LmsHostPage() {
                   {round.category}
                 </h1>
               </div>
-              <span className="text-xs font-mono text-fg-muted">
-                {remainingCount}/{round.answers.length} hidden
-              </span>
+              <div className="flex items-center gap-4">
+                {settings.answerCardTimerEnabled && timeLeft !== null && (
+                  <span className="text-xl font-mono text-accent font-bold">
+                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                  </span>
+                )}
+                <span className="text-xs font-mono text-fg-muted">
+                  {remainingCount}/{round.answers.length} hidden
+                </span>
+              </div>
             </div>
 
             <RoundBoard
