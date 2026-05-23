@@ -1,18 +1,15 @@
 import Papa from 'papaparse';
 import {
   JEOPARDY_CATEGORY_COUNT,
-  JEOPARDY_CELL_COUNT,
   JEOPARDY_VALUES,
 } from './constants';
 import type { Cell, Quiz } from './types';
 
-const REQUIRED_HEADERS = ['category', 'value', 'question', 'answer'] as const;
-
-type ParseResult =
+export type ParseResult =
   | { ok: true; quiz: Quiz }
   | { ok: false; errors: string[] };
 
-interface ParseOptions {
+export interface ParseOptions {
   /** Quiz name; defaults to file basename or "Untitled". */
   name?: string;
   /** Provide a deterministic id (otherwise uses crypto.randomUUID). */
@@ -26,17 +23,12 @@ function makeId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function normaliseHeader(h: string): string {
-  return h.trim().toLowerCase();
-}
-
 export function parseQuizCsv(input: string, options: ParseOptions = {}): ParseResult {
   const errors: string[] = [];
 
-  const result = Papa.parse<Record<string, string>>(input, {
-    header: true,
+  const result = Papa.parse<string[]>(input, {
+    header: false,
     skipEmptyLines: 'greedy',
-    transformHeader: normaliseHeader,
     transform: (value) => (typeof value === 'string' ? value.trim() : value),
   });
 
@@ -46,132 +38,95 @@ export function parseQuizCsv(input: string, options: ParseOptions = {}): ParseRe
     }
   }
 
-  const headers = result.meta.fields ?? [];
-  const missing = REQUIRED_HEADERS.filter((h) => !headers.includes(h));
-  if (missing.length > 0) {
-    errors.push(
-      `Missing required column(s): ${missing.join(', ')}. Header must be exactly: ${REQUIRED_HEADERS.join(',')}.`,
-    );
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  const rows = result.data.filter((row) => row.some((cell) => cell.length > 0));
+
+  if (rows.length === 0) {
+    return { ok: false, errors: ['No data found.'] };
+  }
+
+  const categoryHeaders = rows[0];
+  if (!categoryHeaders || categoryHeaders.length !== JEOPARDY_CATEGORY_COUNT) {
+    errors.push(`Expected exactly ${JEOPARDY_CATEGORY_COUNT} categories as column headers in the first row. Found ${categoryHeaders?.length || 0}.`);
+  }
+
+  const expectedRows = 1 + (JEOPARDY_VALUES.length * 2);
+  if (rows.length !== expectedRows) {
+    errors.push(`Expected exactly ${expectedRows} rows total (1 row for categories, and ${JEOPARDY_VALUES.length * 2} rows for ${JEOPARDY_VALUES.length} values of alternating Question/Answer rows). Found ${rows.length}.`);
   }
 
   if (errors.length > 0) {
     return { ok: false, errors };
   }
 
-  const rows = result.data.filter((row) =>
-    REQUIRED_HEADERS.some((h) => (row[h] ?? '').toString().length > 0),
-  );
-
-  if (rows.length !== JEOPARDY_CELL_COUNT) {
-    errors.push(
-      `Expected exactly ${JEOPARDY_CELL_COUNT} rows (${JEOPARDY_CATEGORY_COUNT} categories × ${JEOPARDY_VALUES.length} values), got ${rows.length}.`,
-    );
-  }
-
-  const seenCells = new Map<string, number>();
-  const byCategory = new Map<string, Set<number>>();
-  const categoryOrder: string[] = [];
   const cells: Cell[] = [];
+  const quizId = options.id ?? makeId();
 
-  rows.forEach((row, i) => {
-    const lineNo = i + 2;
-    const category = (row.category ?? '').toString().trim();
-    const valueRaw = (row.value ?? '').toString().trim();
-    const question = (row.question ?? '').toString().trim();
-    const answer = (row.answer ?? '').toString().trim();
-
-    if (!category) errors.push(`Row ${lineNo}: missing category.`);
-    if (!question) errors.push(`Row ${lineNo}: missing question.`);
-    if (!answer) errors.push(`Row ${lineNo}: missing answer.`);
-
-    const value = Number(valueRaw);
-    if (!Number.isFinite(value)) {
-      errors.push(`Row ${lineNo}: value "${valueRaw}" is not a number.`);
-      return;
-    }
-    if (!JEOPARDY_VALUES.includes(value as (typeof JEOPARDY_VALUES)[number])) {
-      errors.push(
-        `Row ${lineNo}: value ${value} is not allowed. Must be one of ${JEOPARDY_VALUES.join(', ')}.`,
-      );
-      return;
+  for (let c = 0; c < JEOPARDY_CATEGORY_COUNT; c++) {
+    const category = categoryHeaders[c];
+    if (!category) {
+      errors.push(`Missing category name in column ${c + 1}`);
+      continue;
     }
 
-    if (!byCategory.has(category)) {
-      byCategory.set(category, new Set());
-      categoryOrder.push(category);
-    }
-    const set = byCategory.get(category)!;
-    if (set.has(value)) {
-      errors.push(
-        `Row ${lineNo}: duplicate cell for "${category}" at value ${value}. Each category needs each value exactly once.`,
-      );
-    } else {
-      set.add(value);
-    }
+    for (let vIdx = 0; vIdx < JEOPARDY_VALUES.length; vIdx++) {
+      const value = JEOPARDY_VALUES[vIdx];
+      const qRow = 1 + (vIdx * 2);
+      const aRow = qRow + 1;
 
-    const key = `${category}__${value}`;
-    seenCells.set(key, (seenCells.get(key) ?? 0) + 1);
+      const question = rows[qRow]?.[c];
+      const answer = rows[aRow]?.[c];
 
-    cells.push({
-      id: key,
-      category,
-      value,
-      question,
-      answer,
-    });
-  });
+      if (!question) errors.push(`Missing question for "${category}" at value ${value} (Row ${qRow + 1})`);
+      if (!answer) errors.push(`Missing answer for "${category}" at value ${value} (Row ${aRow + 1})`);
 
-  if (categoryOrder.length !== JEOPARDY_CATEGORY_COUNT) {
-    errors.push(
-      `Expected exactly ${JEOPARDY_CATEGORY_COUNT} unique categories, got ${categoryOrder.length}: ${categoryOrder.join(', ') || '(none)'}.`,
-    );
-  }
-
-  for (const [cat, values] of byCategory.entries()) {
-    if (values.size !== JEOPARDY_VALUES.length) {
-      errors.push(
-        `Category "${cat}" has ${values.size} cells. Each category needs exactly ${JEOPARDY_VALUES.length} (one per ${JEOPARDY_VALUES.join('/')}).`,
-      );
+      if (question && answer) {
+        cells.push({
+          id: `${quizId}__${category}__${value}`,
+          category,
+          value,
+          question,
+          answer
+        });
+      }
     }
   }
 
   if (errors.length > 0) {
     return { ok: false, errors };
   }
-
-  cells.sort((a, b) => {
-    const ai = categoryOrder.indexOf(a.category);
-    const bi = categoryOrder.indexOf(b.category);
-    if (ai !== bi) return ai - bi;
-    return a.value - b.value;
-  });
 
   return {
     ok: true,
     quiz: {
-      id: options.id ?? makeId(),
+      id: quizId,
       name: options.name ?? 'Untitled quiz',
       createdAt: Date.now(),
-      categories: categoryOrder,
+      categories: categoryHeaders.filter(c => c !== undefined && c.trim() !== ''),
       cells,
     },
   };
 }
 
 export function quizToCsv(quiz: Quiz): string {
-  const rows = [...quiz.cells].sort((a, b) => {
-    const ai = quiz.categories.indexOf(a.category);
-    const bi = quiz.categories.indexOf(b.category);
-    if (ai !== bi) return ai - bi;
-    return a.value - b.value;
-  });
-  return Papa.unparse(
-    rows.map((c) => ({
-      category: c.category,
-      value: c.value,
-      question: c.question,
-      answer: c.answer,
-    })),
-    { columns: [...REQUIRED_HEADERS] },
-  );
+  const result: string[][] = [];
+  const cats = [...new Set(quiz.cells.map(c => c.category))];
+  result.push(cats);
+
+  for (const val of JEOPARDY_VALUES) {
+    const qRow: string[] = [];
+    const aRow: string[] = [];
+    for (const cat of cats) {
+      const cell = quiz.cells.find(c => c.category === cat && c.value === val);
+      qRow.push(cell?.question ?? '');
+      aRow.push(cell?.answer ?? '');
+    }
+    result.push(qRow);
+    result.push(aRow);
+  }
+
+  return Papa.unparse(result, { header: false });
 }

@@ -114,6 +114,29 @@ export function CsvImporter({ onImported }: CsvImporterProps) {
             <p className="text-xs text-fg-muted mt-1">
               Columns: <span className="font-mono">round,category,answer</span> · 1+ rounds, 2+ answers each
             </p>
+            <div className="text-left mt-2">
+              <p>For LMS, the file must be formatted with rounds as columns.</p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                <li>Row 1 = Category names for each round (e.g. "Science", "History")</li>
+                <li>Rows 2+ = Answers for that category</li>
+                <li>Each column represents one round. (e.g., 5 columns = 5 rounds)</li>
+              </ul>
+              <p className="mt-2 text-primary">
+                A minimum of 5 answers per round is required.
+              </p>
+            </div>
+            {errors && errors.length > 0 && (
+              <div className="rounded-md border border-[color-mix(in_srgb,var(--danger)_30%,var(--border))] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] p-3">
+                <p className="text-xs font-semibold text-danger mb-1">
+                  {errors.length} issue{errors.length === 1 ? '' : 's'} to fix
+                </p>
+                <ul className="text-xs text-fg-muted list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                  {errors.map((err, i) => (
+                    <li key={i} className="leading-relaxed">{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button

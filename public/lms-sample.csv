@@ -1,34 +1,17 @@
-round,category,answer
-1,Landeshauptstädte Deutschlands,Berlin
-1,Landeshauptstädte Deutschlands,Hamburg
-1,Landeshauptstädte Deutschlands,München
-1,Landeshauptstädte Deutschlands,Düsseldorf
-1,Landeshauptstädte Deutschlands,Stuttgart
-1,Landeshauptstädte Deutschlands,Hannover
-1,Landeshauptstädte Deutschlands,Dresden
-1,Landeshauptstädte Deutschlands,Mainz
-1,Landeshauptstädte Deutschlands,Bremen
-1,Landeshauptstädte Deutschlands,Erfurt
-1,Landeshauptstädte Deutschlands,Magdeburg
-1,Landeshauptstädte Deutschlands,Kiel
-1,Landeshauptstädte Deutschlands,Schwerin
-1,Landeshauptstädte Deutschlands,Potsdam
-1,Landeshauptstädte Deutschlands,Wiesbaden
-1,Landeshauptstädte Deutschlands,Saarbrücken
-2,Bundeskanzler der BRD,Konrad Adenauer
-2,Bundeskanzler der BRD,Ludwig Erhard
-2,Bundeskanzler der BRD,Kurt Georg Kiesinger
-2,Bundeskanzler der BRD,Willy Brandt
-2,Bundeskanzler der BRD,Helmut Schmidt
-2,Bundeskanzler der BRD,Helmut Kohl
-2,Bundeskanzler der BRD,Gerhard Schröder
-2,Bundeskanzler der BRD,Angela Merkel
-2,Bundeskanzler der BRD,Olaf Scholz
-3,Planeten unseres Sonnensystems,Merkur
-3,Planeten unseres Sonnensystems,Venus
-3,Planeten unseres Sonnensystems,Erde
-3,Planeten unseres Sonnensystems,Mars
-3,Planeten unseres Sonnensystems,Jupiter
-3,Planeten unseres Sonnensystems,Saturn
-3,Planeten unseres Sonnensystems,Uranus
-3,Planeten unseres Sonnensystems,Neptun
+Landeshauptstädte Deutschlands;Bundeskanzler der BRD;Planeten unseres Sonnensystems
+Berlin;Konrad Adenauer;Merkur
+Hamburg;Ludwig Erhard;Venus
+München;Kurt Georg Kiesinger;Erde
+Düsseldorf;Willy Brandt;Mars
+Stuttgart;Helmut Schmidt;Jupiter
+Hannover;Helmut Kohl;Saturn
+Dresden;Gerhard Schröder;Uranus
+Mainz;Angela Merkel;Neptun
+Bremen;Olaf Scholz;
+Erfurt;;
+Magdeburg;;
+Kiel;;
+Schwerin;;
+Potsdam;;
+Wiesbaden;;
+Saarbrücken;;

@@ -1,31 +1,11 @@
-category,value,question,answer
-World Capitals,100,The capital of France,Paris
-World Capitals,200,The capital of Australia (not Sydney),Canberra
-World Capitals,300,"This Scandinavian capital lies across 14 islands",Stockholm
-World Capitals,400,The capital of Kazakhstan since 2019,Astana
-World Capitals,500,The world's highest capital city by elevation,La Paz
-Tech History,100,The company that introduced the iPhone in 2007,Apple
-Tech History,200,The first widely used graphical web browser,Mosaic
-Tech History,300,"Year the World Wide Web was made publicly available",1991
-Tech History,400,The two founders of Hewlett-Packard,Hewlett and Packard
-Tech History,500,The programming language designed by Brendan Eich in 10 days,JavaScript
-Movies,100,The director of Inception and Interstellar,Christopher Nolan
-Movies,200,The actor who plays Tony Stark,Robert Downey Jr.
-Movies,300,The 1994 film featuring a box of chocolates quote,Forrest Gump
-Movies,400,Studio Ghibli film about a girl in a bathhouse,Spirited Away
-Movies,500,The Coen brothers film with a rug that really tied the room together,The Big Lebowski
-Science,100,The chemical symbol for gold,Au
-Science,200,The closest planet to the Sun,Mercury
-Science,300,The powerhouse of the cell,Mitochondrion
-Science,400,The scientist who formulated the laws of motion,Isaac Newton
-Science,500,The particle predicted by Peter Higgs in 1964,Higgs boson
-Music,100,The lead singer of Queen,Freddie Mercury
-Music,200,"The Beatles album with a zebra crossing on the cover",Abbey Road
-Music,300,The composer of The Four Seasons,Antonio Vivaldi
-Music,400,The genre that originated in Jamaica in the late 1960s,Reggae
-Music,500,"The album by Pink Floyd whose cover features a prism",The Dark Side of the Moon
-Sports,100,The sport played at Wimbledon,Tennis
-Sports,200,The number of players on a soccer team on the field,Eleven
-Sports,300,"Country that has won the most FIFA World Cups",Brazil
-Sports,400,The fastest land animal often used as a sport mascot,Cheetah
-Sports,500,The only NFL team to complete a perfect season,1972 Miami Dolphins
+World Capitals;Tech History;Movies;Science;Music;Sports
+The capital of France;The company that introduced the iPhone in 2007;The director of Inception and Interstellar;The chemical symbol for gold;The lead singer of Queen;The sport played at Wimbledon
+Paris;Apple;Christopher Nolan;Au;Freddie Mercury;Tennis
+The capital of Australia (not Sydney);The first widely used graphical web browser;The actor who plays Tony Stark;The closest planet to the Sun;"The Beatles album with a zebra crossing on the cover";The number of players on a soccer team on the field
+Canberra;Mosaic;Robert Downey Jr.;Mercury;Abbey Road;Eleven
+"This Scandinavian capital lies across 14 islands";"Year the World Wide Web was made publicly available";The 1994 film featuring a box of chocolates quote;The powerhouse of the cell;The composer of The Four Seasons;"Country that has won the most FIFA World Cups"
+Stockholm;1991;Forrest Gump;Mitochondrion;Antonio Vivaldi;Brazil
+The capital of Kazakhstan since 2019;The two founders of Hewlett-Packard;Studio Ghibli film about a girl in a bathhouse;The scientist who formulated the laws of motion;The genre that originated in Jamaica in the late 1960s;The fastest land animal often used as a sport mascot
+Astana;Hewlett and Packard;Spirited Away;Isaac Newton;Reggae;Cheetah
+The world's highest capital city by elevation;The programming language designed by Brendan Eich in 10 days;The Coen brothers film with a rug that really tied the room together;The particle predicted by Peter Higgs in 1964;"The album by Pink Floyd whose cover features a prism";The only country to host the Summer Olympics but not win a gold medal
+La Paz;JavaScript;The Big Lebowski;Higgs boson;The Dark Side of the Moon;Canada

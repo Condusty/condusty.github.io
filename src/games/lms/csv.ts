@@ -1,19 +1,6 @@
 import Papa from 'papaparse';
 import { LMS_MIN_ANSWERS_PER_ROUND } from './constants';
-import type { LmsAnswer, LmsQuiz, LmsRound } from './types';
-
-const REQUIRED_HEADERS = ['round', 'category', 'answer'] as const;
-
-type ParseResult =
-  | { ok: true; quiz: LmsQuiz }
-  | { ok: false; errors: string[] };
-
-interface ParseOptions {
-  /** Quiz name; defaults to file basename or "Untitled". */
-  name?: string;
-  /** Provide a deterministic id (otherwise uses crypto.randomUUID). */
-  id?: string;
-}
+import type { LmsQuiz, LmsRound } from './types';
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -22,17 +9,23 @@ function makeId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function normaliseHeader(h: string): string {
-  return h.trim().toLowerCase();
-}
+export type ParseOptions = {
+  /** Quiz name; defaults to file basename or "Untitled". */
+  name?: string;
+  /** Provide a deterministic id (otherwise uses crypto.randomUUID). */
+  id?: string;
+};
+
+export type ParseResult =
+  | { ok: true; quiz: LmsQuiz }
+  | { ok: false, errors: string[] };
 
 export function parseLmsCsv(input: string, options: ParseOptions = {}): ParseResult {
   const errors: string[] = [];
 
-  const result = Papa.parse<Record<string, string>>(input, {
-    header: true,
+  const result = Papa.parse<string[]>(input, {
+    header: false,
     skipEmptyLines: 'greedy',
-    transformHeader: normaliseHeader,
     transform: (value) => (typeof value === 'string' ? value.trim() : value),
   });
 
@@ -42,109 +35,70 @@ export function parseLmsCsv(input: string, options: ParseOptions = {}): ParseRes
     }
   }
 
-  const headers = result.meta.fields ?? [];
-  const missing = REQUIRED_HEADERS.filter((h) => !headers.includes(h));
-  if (missing.length > 0) {
-    errors.push(
-      `Missing required column(s): ${missing.join(', ')}. Header must be exactly: ${REQUIRED_HEADERS.join(',')}.`,
-    );
-  }
-
   if (errors.length > 0) {
     return { ok: false, errors };
   }
 
-  const rows = result.data.filter((row) =>
-    REQUIRED_HEADERS.some((h) => (row[h] ?? '').toString().length > 0),
-  );
+  const rows = result.data.filter((row) => row.some((cell) => cell.length > 0));
 
   if (rows.length === 0) {
-    return { ok: false, errors: ['No data rows found.'] };
+    return { ok: false, errors: ['No data found.'] };
   }
 
-  type Bucket = { category: string; answers: string[]; firstLine: number };
-  const byRound = new Map<number, Bucket>();
-  const seenAnswersPerRound = new Map<number, Set<string>>();
+  const headerRow = rows[0];
+  if (!headerRow || headerRow.length === 0) {
+    return { ok: false, errors: ['No columns/categories found in the first row.'] };
+  }
 
-  rows.forEach((row, i) => {
-    const lineNo = i + 2;
-    const roundRaw = (row.round ?? '').toString().trim();
-    const category = (row.category ?? '').toString().trim();
-    const answer = (row.answer ?? '').toString().trim();
+  const rounds: LmsRound[] = [];
+  const quizId = options.id ?? makeId();
 
-    if (!roundRaw) errors.push(`Row ${lineNo}: missing round.`);
-    if (!category) errors.push(`Row ${lineNo}: missing category.`);
-    if (!answer) errors.push(`Row ${lineNo}: missing answer.`);
-
-    const round = Number(roundRaw);
-    if (!Number.isFinite(round) || !Number.isInteger(round) || round < 1) {
-      errors.push(`Row ${lineNo}: round "${roundRaw}" must be a positive integer.`);
-      return;
+  // Each column is a round.
+  for (let colIdx = 0; colIdx < headerRow.length; colIdx++) {
+    const category = headerRow[colIdx];
+    if (!category) {
+      errors.push(`Column ${colIdx + 1} has no category name in the header row.`);
+      continue;
     }
 
-    if (!byRound.has(round)) {
-      byRound.set(round, { category, answers: [], firstLine: lineNo });
-      seenAnswersPerRound.set(round, new Set());
+    const roundNo = colIdx + 1;
+    const answers: string[] = [];
+    const seenAnswers = new Set<string>();
+
+    for (let rowIdx = 1; rowIdx < rows.length; rowIdx++) {
+      const row = rows[rowIdx];
+      const answer = row[colIdx];
+
+      if (answer) {
+        const key = answer.toLowerCase();
+        if (seenAnswers.has(key)) {
+          errors.push(`Column ${roundNo} ("${category}"): duplicate answer "${answer}" on row ${rowIdx + 1}.`);
+        } else {
+          seenAnswers.add(key);
+          answers.push(answer);
+        }
+      }
     }
-    const bucket = byRound.get(round)!;
-    if (bucket.category !== category) {
+
+    if (answers.length < LMS_MIN_ANSWERS_PER_ROUND && category) {
       errors.push(
-        `Row ${lineNo}: round ${round} has conflicting categories "${bucket.category}" (row ${bucket.firstLine}) and "${category}". Each round must have exactly one category.`,
+        `Round ${roundNo} ("${category}") has ${answers.length} answer(s). Each round needs at least ${LMS_MIN_ANSWERS_PER_ROUND}.`,
       );
     }
 
-    if (answer) {
-      const seen = seenAnswersPerRound.get(round)!;
-      const key = answer.toLowerCase();
-      if (seen.has(key)) {
-        errors.push(`Row ${lineNo}: duplicate answer "${answer}" in round ${round}.`);
-      } else {
-        seen.add(key);
-        bucket.answers.push(answer);
-      }
-    }
-  });
-
-  const roundNumbers = [...byRound.keys()].sort((a, b) => a - b);
-  if (roundNumbers.length === 0) {
-    errors.push('No valid rounds found.');
-  } else {
-    for (let i = 0; i < roundNumbers.length; i++) {
-      const expected = i + 1;
-      if (roundNumbers[i] !== expected) {
-        errors.push(
-          `Round numbers must be contiguous starting at 1. Expected ${expected}, got ${roundNumbers[i]}.`,
-        );
-        break;
-      }
-    }
-  }
-
-  for (const [round, bucket] of byRound.entries()) {
-    if (bucket.answers.length < LMS_MIN_ANSWERS_PER_ROUND) {
-      errors.push(
-        `Round ${round} ("${bucket.category}") has ${bucket.answers.length} answer(s). Each round needs at least ${LMS_MIN_ANSWERS_PER_ROUND}.`,
-      );
-    }
+    rounds.push({
+      index: roundNo,
+      category,
+      answers: answers.map((text, idx) => ({
+        id: `${quizId}__r${roundNo}__a${idx}`,
+        text,
+      })),
+    });
   }
 
   if (errors.length > 0) {
     return { ok: false, errors };
   }
-
-  const quizId = options.id ?? makeId();
-  const rounds: LmsRound[] = roundNumbers.map((roundNo) => {
-    const bucket = byRound.get(roundNo)!;
-    const answers: LmsAnswer[] = bucket.answers.map((text, idx) => ({
-      id: `${quizId}__r${roundNo}__a${idx}`,
-      text,
-    }));
-    return {
-      index: roundNo,
-      category: bucket.category,
-      answers,
-    };
-  });
 
   return {
     ok: true,
@@ -158,16 +112,20 @@ export function parseLmsCsv(input: string, options: ParseOptions = {}): ParseRes
 }
 
 export function lmsQuizToCsv(quiz: LmsQuiz): string {
-  const rows: { round: number; category: string; answer: string }[] = [];
-  const sorted = [...quiz.rounds].sort((a, b) => a.index - b.index);
-  for (const round of sorted) {
-    for (const answer of round.answers) {
-      rows.push({
-        round: round.index,
-        category: round.category,
-        answer: answer.text,
-      });
+  const sortedRounds = [...quiz.rounds].sort((a, b) => a.index - b.index);
+  const categories = sortedRounds.map(r => r.category);
+
+  const maxAnswers = Math.max(0, ...sortedRounds.map(r => r.answers.length));
+
+  const rows: string[][] = [categories];
+
+  for (let i = 0; i < maxAnswers; i++) {
+    const row: string[] = [];
+    for (const round of sortedRounds) {
+      row.push(round.answers[i] ? round.answers[i].text : '');
     }
+    rows.push(row);
   }
-  return Papa.unparse(rows, { columns: [...REQUIRED_HEADERS] });
+
+  return Papa.unparse(rows, { header: false });
 }
